@@ -8,7 +8,7 @@ public class GameCfgAuthoring : MonoBehaviour
         {
             var entity = GetEntity(TransformUsageFlags.None);
             AddComponent(entity, new GameConfig{
-                isPaused = false,
+                isPaused = true,
                 secondsPerHour = authoring.secondsPerHour
             });
             AddComponent(entity, new GameTime{
