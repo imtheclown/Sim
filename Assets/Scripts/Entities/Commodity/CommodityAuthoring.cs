@@ -16,7 +16,7 @@ class CommodityAuthoring : MonoBehaviour{
                 hungerLevel = 0.5f,
                 feedIntake = 0,
                 digestionRate = 0,
-                growthFactor = 1,
+                growthFactor = 5,
                 viewRadius = authoring.viewRadius,
                 viewAngle = authoring.viewAngle,
                 maxWeight = authoring.maxWeight,
