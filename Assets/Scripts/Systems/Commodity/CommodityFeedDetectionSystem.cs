@@ -1,10 +1,12 @@
+using Unity.Burst;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Transforms;
 using Unity.Mathematics;
-using Unity.Collections;
-using Unity.Jobs; // For JobHandle
+using Unity.Jobs;
 
 [UpdateInGroup(typeof(SimulationSystemGroup))]
+[BurstCompile]
 public partial class FeedCommoditySystem : SystemBase
 {
     public NativeParallelMultiHashMap<int, Entity> FeedSpatialMap;
@@ -13,55 +15,53 @@ public partial class FeedCommoditySystem : SystemBase
 
     protected override void OnCreate()
     {
-        // Initialize the spatial hash map
         FeedSpatialMap = new NativeParallelMultiHashMap<int, Entity>(1000, Allocator.Persistent);
         ecbSystem = World.GetOrCreateSystemManaged<EndSimulationEntityCommandBufferSystem>();
     }
 
     protected override void OnDestroy()
     {
-        // Dispose of the spatial hash map
         if (FeedSpatialMap.IsCreated)
             FeedSpatialMap.Dispose();
     }
 
     protected override void OnUpdate()
     {
-        // Step 1: Update the spatial hash map (FeedSpatialHashSystem functionality)
         FeedSpatialMap.Clear();
 
         var feedMapWriter = FeedSpatialMap.AsParallelWriter();
-
         float cellSize = CellSize;
 
-        JobHandle spatialHashJob = Entities
+        var spatialHashJob = Entities
             .WithAll<FeedSpecs>()
             .ForEach((Entity entity, in LocalTransform transform) =>
             {
                 int2 cell = SpatialHashUtility.Hash(transform.Position, cellSize);
                 int hash = SpatialHashUtility.HashInt(cell);
-
                 feedMapWriter.Add(hash, entity);
             }).ScheduleParallel(Dependency);
 
-        // Update the system's Dependency
         Dependency = spatialHashJob;
 
-        // Step 2: Detect feed for entities (CommodityFeedDetectionSystem functionality)
-        var feedMapReader = FeedSpatialMap; // Pass feed map as a local variable
+        var feedMapReader = FeedSpatialMap;
         var localTransformLookup = GetComponentLookup<LocalTransform>(true);
         var feedSpecsLookup = GetComponentLookup<FeedSpecs>(false);
         var ecbParallel = ecbSystem.CreateCommandBuffer().AsParallelWriter();
 
-        JobHandle detectionJob = Entities
+        float cellSizeForDetection = CellSize; // safe copy
+
+        var detectionJob = Entities
             .WithName("FishFeedDetection")
             .WithAll<CommodityBase>()
+            .WithReadOnly(feedMapReader)
+            .WithReadOnly(localTransformLookup)
+            .WithNativeDisableParallelForRestriction(feedSpecsLookup) // <<< Important!
             .ForEach((Entity fishEntity, int entityInQueryIndex, ref CommodityTargetFeed targetData, in CommodityBase commodity, in LocalTransform commodityTransform) =>
             {
                 float3 commodityPos = commodityTransform.Position;
                 float3 commodityForward = math.mul(commodityTransform.Rotation, new float3(0, 0, 1));
 
-                int2 cell = SpatialHashUtility.Hash(commodityPos, cellSize);
+                int2 cell = SpatialHashUtility.Hash(commodityPos, cellSizeForDetection);
                 int hash = SpatialHashUtility.HashInt(cell);
 
                 float nearestDistance = float.MaxValue;
@@ -99,29 +99,37 @@ public partial class FeedCommoditySystem : SystemBase
                     }
                     while (feedMapReader.TryGetNextValue(out feedEntity, ref it));
                 }
-                // Always update targetData even if no feed is found
-                if(nearestFeed != Entity.Null){
+
+                if (nearestFeed != Entity.Null)
+                {
+                    // Target feed found
                     targetData.targetPos = nearestPos;
                     targetData.hasTarget = true;
                     ecbParallel.SetComponent(entityInQueryIndex, fishEntity, targetData);
-                    if(feedSpecsLookup.HasComponent(nearestFeed)){
+
+                    if (feedSpecsLookup.HasComponent(nearestFeed))
+                    {
                         FeedSpecs feedSpecs = feedSpecsLookup[nearestFeed];
-                        if(nearestDistance <= 0.3f){
-                            feedSpecs.ReduceContent(3);
+                        if (nearestDistance <= 0.3f)
+                        {
+                            feedSpecs.ReduceContent(3f); // or your custom bite size
                         }
+
+                        // Update the feed specs after reducing content
                         ecbParallel.SetComponent(entityInQueryIndex, nearestFeed, feedSpecs);
                     }
-                }else{
+                }
+                else
+                {
+                    // No feed found
+                    targetData.targetPos = float3.zero;
                     targetData.hasTarget = false;
                     ecbParallel.SetComponent(entityInQueryIndex, fishEntity, targetData);
                 }
-
             })
-            .WithReadOnly(feedMapReader)
-            .WithReadOnly(localTransformLookup)
-            .ScheduleParallel(spatialHashJob); // Ensure this job depends on the spatial hash job
+            .ScheduleParallel(spatialHashJob); // depend on spatial hashing
 
-        // Update the system's Dependency
         Dependency = detectionJob;
+        ecbSystem.AddJobHandleForProducer(Dependency); // important for ECB playback
     }
 }
