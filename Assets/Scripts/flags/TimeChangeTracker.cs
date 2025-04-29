@@ -5,6 +5,7 @@ public struct TimeChangeTracker: IComponentData{
     //should be set true for each change in the temperature in the GameEnv component
     //each system should only close its designated flag
     public bool forTemperature;
+    public bool forBioProcessSystem;
 
 
     // Static method to set all flags to true
@@ -12,5 +13,7 @@ public struct TimeChangeTracker: IComponentData{
     public void SetAllFlagsTrue()
     {
         forTemperature = true;
+        forBioProcessSystem = true;
     }
 }
+

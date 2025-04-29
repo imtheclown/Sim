@@ -28,6 +28,15 @@ public partial class FeedCommoditySystem : SystemBase
 
     protected override void OnUpdate()
     {
+        var query = GetEntityQuery(ComponentType.ReadOnly<GameConfig>());
+
+        // Access the singleton component
+        var gameConfig = query.GetSingleton<GameConfig>();
+
+        if(gameConfig.isPaused){
+            return;
+        }
+        
         var feedManager = SystemAPI.GetSingleton<FeedManager>();
         
         if (!FeedSpatialMap.IsCreated || FeedSpatialMap.Capacity < feedManager.currentFeedCount)

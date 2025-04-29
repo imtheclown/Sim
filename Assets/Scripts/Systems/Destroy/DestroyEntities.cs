@@ -14,6 +14,14 @@ public partial class DestroyEntitiesWithTagSystem : SystemBase
 
     protected override void OnUpdate()
     {
+        var query = GetEntityQuery(ComponentType.ReadOnly<GameConfig>());
+
+        // Access the singleton component
+        var gameConfig = query.GetSingleton<GameConfig>();
+
+        if(gameConfig.isPaused){
+            return;
+        }
         var ecbParallel = ecbSystem.CreateCommandBuffer().AsParallelWriter();
 
         Entities
