@@ -58,17 +58,25 @@ public partial class FeedCommoditySystem : SystemBase
         var feedMapReader = FeedSpatialMap;
         var localTransformLookup = GetComponentLookup<LocalTransform>(true);
         var feedSpecsLookup = GetComponentLookup<FeedSpecs>(false);
+        var toDestroyLookup = GetComponentLookup<ToDestroyTag>(true);
+        var commodityBioInfoLookup = GetComponentLookup<CommodityBioInfo>(false); 
         var ecbParallel = ecbSystem.CreateCommandBuffer().AsParallelWriter();
 
         float cellSizeForDetection = CellSize; // safe copy
 
         var detectionJob = Entities
             .WithName("FishFeedDetection")
-            .WithAll<CommodityBase>()
+            .WithAll<CommodityBioInfo>()
             .WithReadOnly(feedMapReader)
             .WithReadOnly(localTransformLookup)
-            .WithNativeDisableParallelForRestriction(feedSpecsLookup) // <<< Important!
-            .ForEach((Entity fishEntity, int entityInQueryIndex, ref CommodityTargetFeed targetData, in CommodityBase commodity, in LocalTransform commodityTransform) =>
+            .WithReadOnly(toDestroyLookup)
+            .WithNativeDisableParallelForRestriction(feedSpecsLookup)
+            .ForEach((Entity fishEntity, 
+                    int entityInQueryIndex, 
+                    ref CommodityTargetFeed targetData, 
+                    ref CommodityBioInfo commodity, 
+                    in LocalTransform commodityTransform
+                ) =>
             {
                 float3 commodityPos = commodityTransform.Position;
                 float3 commodityForward = math.mul(commodityTransform.Rotation, new float3(0, 0, 1));
@@ -124,11 +132,15 @@ public partial class FeedCommoditySystem : SystemBase
                         FeedSpecs feedSpecs = feedSpecsLookup[nearestFeed];
                         if (nearestDistance <= 0.3f)
                         {
-                            feedSpecs.ReduceContent(3f); // or your custom bite size
+                            float amount = feedSpecs.ReduceContent(3f); // or your custom bite size
+                            if(!toDestroyLookup.HasComponent(nearestFeed) && amount == 0){
+                                ecbParallel.AddComponent(entityInQueryIndex, nearestFeed, new ToDestroyTag{});
+                            }
+                            if(amount > 0){
+                                commodity.feedIntake += amount;
+                                ecbParallel.SetComponent(entityInQueryIndex, nearestFeed, feedSpecs);
+                            }
                         }
-
-                        // Update the feed specs after reducing content
-                        ecbParallel.SetComponent(entityInQueryIndex, nearestFeed, feedSpecs);
                     }
                 }
                 else

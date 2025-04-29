@@ -15,13 +15,11 @@ class CommodityAuthoring : MonoBehaviour{
                 hungerLevel = 0.5f,
                 feedIntake = 0,
                 digestionRate = 0,
-                growthFactor = 1
-            });
-            AddComponent(entity, new CommodityGrowthFactors{});
-            AddComponent(entity, new CommodityBase{
+                growthFactor = 1,
                 viewRadius = authoring.viewRadius,
                 viewAngle = authoring.viewAngle
             });
+            AddComponent(entity, new CommodityGrowthFactors{});
             AddComponent(entity, new CommodityTargetFeed{});
 
         }
@@ -34,16 +32,13 @@ public struct CommodityBioInfo : IComponentData{
     public float feedIntake; // amount of feed consumed in mg
     public float digestionRate; //amount of feed digest per hour in mg
     public float growthFactor; //amount of weight gained in mg]
-    public float3 nearestFeed;
+
+    public float viewRadius;
+    public float viewAngle;
 }
 
 public struct CommodityGrowthFactors: IComponentData{
     public float capFeedConsumption;
-}
-
-public struct CommodityBase: IComponentData{
-    public float viewRadius;
-    public float viewAngle;
 }
 
 public struct CommodityTargetFeed: IComponentData{

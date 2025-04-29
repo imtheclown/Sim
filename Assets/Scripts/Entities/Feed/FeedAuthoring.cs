@@ -4,6 +4,7 @@ using Unity.Mathematics;
 public class FeedAuthoring : MonoBehaviour
 {
     [SerializeField] private float feedContent = 20;
+    [SerializeField] private float lifeLimit = 5;
     class Baker: Baker<FeedAuthoring> {
         public override void Bake(FeedAuthoring authoring)
         {
@@ -11,6 +12,9 @@ public class FeedAuthoring : MonoBehaviour
            AddComponent(entity, new FeedSpecs{
                 content=authoring.feedContent
            });
+        //    AddComponent(entity, new LifetimeComponent{
+        //     timeLeft= authoring.lifeLimit
+        //    });
         }
     }
 }

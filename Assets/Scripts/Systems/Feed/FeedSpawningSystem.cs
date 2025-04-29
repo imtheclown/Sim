@@ -24,11 +24,11 @@ public partial struct FeedSpawningSystem: ISystem{
                         var pondSpecs = SystemAPI.GetSingleton<PondSpecs>();
 
             float3 spawnPosition = pondSpecs.center + new float3(
-                UnityEngine.Random.Range(-pondSpecs.length, pondSpecs.length),
+                UnityEngine.Random.Range(-pondSpecs.length, pondSpecs.length) * 0.5f,
                 pondSpecs.height,
-                UnityEngine.Random.Range(-pondSpecs.width, pondSpecs.width)
+                UnityEngine.Random.Range(-pondSpecs.width, pondSpecs.width) * 0.5f
             );
-            var entity = ecb.Instantiate(feedManager.ValueRO.agent);
+            var entity = ecb.Instantiate(feedManager.ValueRO.agent) ;
             feedManager.ValueRW.feedToSpawnCount --;
             feedManager.ValueRW.currentFeedCount ++;
             feedManager.ValueRW.totalFeedSpawned ++;
