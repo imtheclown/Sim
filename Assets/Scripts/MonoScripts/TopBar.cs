@@ -5,6 +5,7 @@ public class TopBar : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI dayText;
     [SerializeField] private TextMeshProUGUI fishCountText;
+    [SerializeField] private TextMeshProUGUI remainingStocks;
     private EntityManager entityManager;
     private Entity gameTime;
     private Entity boidManager;
@@ -20,22 +21,23 @@ public class TopBar : MonoBehaviour
     void Update()
     {
         if (entityManager.Exists(gameTime) && entityManager.HasComponent<GameConfig>(gameTime))
-        {
-            var config = entityManager.GetComponentData<GameTime>(gameTime);
-            dayText.text = $"Day {config.days}";
-        }
+            {
+                var config = entityManager.GetComponentData<GameTime>(gameTime);
+                dayText.text = $"Day {config.days}";
+            }
         else
-        {
-            Debug.LogWarning("Game Time entity not found or missing component.");
-        }
+            {
+                Debug.LogWarning("Game Time entity not found or missing component.");
+            }
         if (entityManager.Exists(boidManager) && entityManager.HasComponent<BoidManager>(boidManager))
-        {
-            var config = entityManager.GetComponentData<BoidManager>(boidManager);
-            fishCountText.text = $"{CMathUtils.FormatNumber(config.activeBoidCount)}/{CMathUtils.FormatNumber(config.boidSpawnedCount)}";
-        }
+            {
+                var config = entityManager.GetComponentData<BoidManager>(boidManager);
+                fishCountText.text = $"{CMathUtils.FormatNumber(config.activeBoidCount)}/{CMathUtils.FormatNumber(config.boidSpawnedCount)}";
+                remainingStocks.text = $"{config.boidToSpawnCount}";
+            }
         else
-        {
-            Debug.LogWarning("Boid Manager entity not found or missing component.");
-        }
+            {
+                Debug.LogWarning("Boid Manager entity not found or missing component.");
+            }
     }
 }

@@ -1,12 +1,17 @@
 using UnityEngine;
 using UnityEngine.UI;
 using Unity.Entities;
+using Unity.Entities.UniversalDelegates;
 
 public class GeneralUI : MonoBehaviour
 {
+    [SerializeField] private Button expandBottomButton;
     [SerializeField] private Button unPauseButton;
     [SerializeField] private GameObject titleScreen;
     [SerializeField] private GameObject topBar;
+    [SerializeField] private GameObject botBar;
+
+    //ui states
 
     private EntityManager entityManager;
     private Entity gameConfigEntity;
@@ -32,6 +37,7 @@ public class GeneralUI : MonoBehaviour
             titleScreen.SetActive(false);
             entityManager.SetComponentData(gameConfigEntity, config);
             topBar.SetActive(true);
+            botBar.SetActive(true);
         }
         else
         {
