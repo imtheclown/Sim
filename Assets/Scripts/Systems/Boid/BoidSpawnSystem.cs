@@ -37,8 +37,6 @@ public partial struct BoidSpawnSystem : ISystem
                 UnityEngine.Random.Range(-pondSpecs.height, pondSpecs.height),
                 UnityEngine.Random.Range(-pondSpecs.width, pondSpecs.width)
             );
-
-            UnityEngine.Debug.Log($"spawn position: ${spawnPosition}");
             var entity = ecb.Instantiate(boidManager.ValueRO.agent);
             ecb.SetComponent(entity, LocalTransform.FromPositionRotationScale(spawnPosition, quaternion.identity, 0.3f));
 
