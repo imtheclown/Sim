@@ -47,7 +47,8 @@ public struct CommodityBase: IComponentData{
 }
 
 public struct CommodityTargetFeed: IComponentData{
-    public Entity target;
+    public float3 targetPos;
+    public bool hasTarget;
 }
 
 

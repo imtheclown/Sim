@@ -1,6 +1,6 @@
 using UnityEngine;
 using Unity.Entities;
-
+using Unity.Mathematics;
 public class FeedAuthoring : MonoBehaviour
 {
     [SerializeField] private float feedContent = 20;
@@ -18,4 +18,10 @@ public class FeedAuthoring : MonoBehaviour
 public struct FeedSpecs: IComponentData {
     public float content; //in mg
     public float timeBeforeExpiration;
+
+    public float ReduceContent(float biteSize)
+    {
+        content = math.max(0f, content - biteSize);
+        return content;
+    }
 }
