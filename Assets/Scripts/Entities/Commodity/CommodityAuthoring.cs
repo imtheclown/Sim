@@ -4,6 +4,8 @@ using Unity.Mathematics;
 
 
 class CommodityAuthoring : MonoBehaviour{
+    [SerializeField] private float viewAngle;
+    [SerializeField] private float viewRadius;
     class Baker: Baker<CommodityAuthoring>{
         public override void Bake(CommodityAuthoring authoring)
         {
@@ -16,6 +18,12 @@ class CommodityAuthoring : MonoBehaviour{
                 growthFactor = 1
             });
             AddComponent(entity, new CommodityGrowthFactors{});
+            AddComponent(entity, new CommodityBase{
+                viewRadius = authoring.viewRadius,
+                viewAngle = authoring.viewAngle
+            });
+            AddComponent(entity, new CommodityTargetFeed{});
+
         }
     }
 }
@@ -31,6 +39,15 @@ public struct CommodityBioInfo : IComponentData{
 
 public struct CommodityGrowthFactors: IComponentData{
     public float capFeedConsumption;
+}
+
+public struct CommodityBase: IComponentData{
+    public float viewRadius;
+    public float viewAngle;
+}
+
+public struct CommodityTargetFeed: IComponentData{
+    public Entity target;
 }
 
 

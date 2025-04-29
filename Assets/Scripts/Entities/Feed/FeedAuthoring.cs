@@ -3,15 +3,19 @@ using Unity.Entities;
 
 public class FeedAuthoring : MonoBehaviour
 {
+    [SerializeField] private float feedContent = 20;
     class Baker: Baker<FeedAuthoring> {
         public override void Bake(FeedAuthoring authoring)
         {
-            throw new System.NotImplementedException();
+           var entity = GetEntity(TransformUsageFlags.Dynamic);
+           AddComponent(entity, new FeedSpecs{
+                content=authoring.feedContent
+           });
         }
     }
 }
 
-public struct FeedSpecs {
-    public float content;
+public struct FeedSpecs: IComponentData {
+    public float content; //in mg
     public float timeBeforeExpiration;
 }
