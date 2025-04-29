@@ -15,10 +15,9 @@ public partial struct FeedSpawningSystem: ISystem{
             return;
         }
 
-        var feedManger = SystemAPI.GetSingletonRW<FeedManager>();
+        var feedManager = SystemAPI.GetSingletonRW<FeedManager>();
 
-        if(feedManger.ValueRO.feedToSpawnCount > 0){
-            UnityEngine.Debug.Log("spawning feeds");
+        if(feedManager.ValueRO.feedToSpawnCount > 0){
             var ecb =SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>()
                                .CreateCommandBuffer(state.WorldUnmanaged);
             
@@ -29,7 +28,10 @@ public partial struct FeedSpawningSystem: ISystem{
                 pondSpecs.height,
                 UnityEngine.Random.Range(-pondSpecs.width, pondSpecs.width)
             );
-            var entity = ecb.Instantiate(feedManger.ValueRO.agent);
+            var entity = ecb.Instantiate(feedManager.ValueRO.agent);
+            feedManager.ValueRW.feedToSpawnCount --;
+            feedManager.ValueRW.currentFeedCount ++;
+            feedManager.ValueRW.totalFeedSpawned ++;
             ecb.SetComponent(entity, LocalTransform.FromPositionRotationScale(spawnPosition, quaternion.identity, 0.3f));
         }
     }

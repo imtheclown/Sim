@@ -15,8 +15,9 @@ public partial class FeedCommoditySystem : SystemBase
 
     protected override void OnCreate()
     {
-        FeedSpatialMap = new NativeParallelMultiHashMap<int, Entity>(1000, Allocator.Persistent);
+        FeedSpatialMap = new NativeParallelMultiHashMap<int, Entity>(50, Allocator.Persistent);
         ecbSystem = World.GetOrCreateSystemManaged<EndSimulationEntityCommandBufferSystem>();
+        
     }
 
     protected override void OnDestroy()
@@ -27,19 +28,30 @@ public partial class FeedCommoditySystem : SystemBase
 
     protected override void OnUpdate()
     {
+        var feedManager = SystemAPI.GetSingleton<FeedManager>();
+        
+        if (!FeedSpatialMap.IsCreated || FeedSpatialMap.Capacity < feedManager.currentFeedCount)
+        {
+            if (FeedSpatialMap.IsCreated)
+                FeedSpatialMap.Dispose();
+
+            FeedSpatialMap = new NativeParallelMultiHashMap<int, Entity>(feedManager.currentFeedCount, Allocator.Persistent);
+        }
+
         FeedSpatialMap.Clear();
+            FeedSpatialMap.Clear();
 
-        var feedMapWriter = FeedSpatialMap.AsParallelWriter();
-        float cellSize = CellSize;
+            var feedMapWriter = FeedSpatialMap.AsParallelWriter();
+            float cellSize = CellSize;
 
-        var spatialHashJob = Entities
-            .WithAll<FeedSpecs>()
-            .ForEach((Entity entity, in LocalTransform transform) =>
-            {
-                int2 cell = SpatialHashUtility.Hash(transform.Position, cellSize);
-                int hash = SpatialHashUtility.HashInt(cell);
-                feedMapWriter.Add(hash, entity);
-            }).ScheduleParallel(Dependency);
+            var spatialHashJob = Entities
+                .WithAll<FeedSpecs>()
+                .ForEach((Entity entity, in LocalTransform transform) =>
+                {
+                    int2 cell = SpatialHashUtility.Hash(transform.Position, cellSize);
+                    int hash = SpatialHashUtility.HashInt(cell);
+                    feedMapWriter.Add(hash, entity);
+                }).ScheduleParallel(Dependency);
 
         Dependency = spatialHashJob;
 

@@ -17,10 +17,17 @@ public partial struct CalcBoidPosition : IJobEntity {
 
     public Random RandomGenerator;
 
-    public void Execute (ref BoidAgentMovement boidAgentMovement, ref LocalTransform localTransform, in CommodityBioInfo bioInfo){
+    public void Execute (ref BoidAgentMovement boidAgentMovement, 
+    ref LocalTransform localTransform, 
+    in CommodityTargetFeed targetFeed, 
+    in CommodityBioInfo bioInfo){
         float3 pos = localTransform.Position;
 
         float3 futureDir = boidAgentMovement.futureDirection;
+
+        if(targetFeed.hasTarget){
+            futureDir = (math.normalize(targetFeed.targetPos - pos) * 0.8f) + futureDir;
+        }
         
         if(math.any(math.isnan(futureDir))){
             futureDir = math.mul(localTransform.Rotation, new float3(0, 0, 0.5f));
@@ -50,7 +57,7 @@ public partial struct CalcBoidPosition : IJobEntity {
 
         boidAgentMovement.direction = futureDir;
         // float3 newPosition =  (futureDir * td * CalcMovementSpeed(1, bioInfo.hungerLevel)) + pos;
-        float3 newPosition =  (futureDir * td * 2) + pos;
+        float3 newPosition =  (futureDir * td * CalcMovementSpeed(1, bioInfo.hungerLevel)) + pos;
 
         // Clamp the position to ensure the boid stays within the defined limits
         newPosition.x = math.clamp(newPosition.x, leftLimit - 1, rightLimit + 1);
