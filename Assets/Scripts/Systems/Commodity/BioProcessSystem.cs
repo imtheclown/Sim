@@ -22,8 +22,8 @@ public partial class PondBioProcess : SystemBase
             return;
         }
         var timeTrackerQuery = GetEntityQuery(ComponentType.ReadOnly<TimeChangeTracker>());
-        var timeTracker = timeTrackerQuery.GetSingleton<TimeChangeTracker>();
-        if(!timeTracker.forBioProcessSystem){
+        var timeTracker = timeTrackerQuery.GetSingletonRW<TimeChangeTracker>();
+        if(!timeTracker.ValueRO.forBioProcessSystem){
             return;
         }
 
@@ -45,7 +45,7 @@ public partial class PondBioProcess : SystemBase
 
                 // Cap values
                 bioInfo.feedIntake = math.max(0f, bioInfo.feedIntake);
-                bioInfo.weight = math.max(0f, bioInfo.maxWeight);
+                bioInfo.weight = math.clamp(bioInfo.weight, 0f, bioInfo.maxWeight);
                 bioInfo.hungerLevel = math.clamp(bioInfo.hungerLevel, 0f, 1f);
 
                 float weightRatio = bioInfo.weight / bioInfo.maxWeight; // Ratio of current weight to max weight
@@ -53,6 +53,7 @@ public partial class PondBioProcess : SystemBase
                 bioInfo.maxFeedRate = CalculateMaxFeedRate(bioInfo.weight);
             })
             .ScheduleParallel();
+        timeTracker.ValueRW.forBioProcessSystem = false;    
     }
     public static float CalculateMaxFeedRate(float weightMg)
     {
