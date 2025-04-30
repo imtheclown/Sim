@@ -36,7 +36,7 @@ public partial class FeedCommoditySystem : SystemBase
         if(gameConfig.isPaused){
             return;
         }
-        
+
         var feedManager = SystemAPI.GetSingleton<FeedManager>();
         
         if (!FeedSpatialMap.IsCreated || FeedSpatialMap.Capacity < feedManager.currentFeedCount)
@@ -101,6 +101,10 @@ public partial class FeedCommoditySystem : SystemBase
                 {
                     do
                     {
+                        if(commodity.hungerLevel < 0.1f){
+                            targetData.hasTarget = false;
+                            continue;
+                        }
                         if (localTransformLookup.HasComponent(feedEntity))
                         {
                             var feedTransform = localTransformLookup[feedEntity];

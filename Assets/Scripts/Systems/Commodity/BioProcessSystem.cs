@@ -21,7 +21,7 @@ public partial class PondBioProcess : SystemBase
         if(gameConfig.isPaused){
             return;
         }
-        var timeTrackerQuery = GetEntityQuery(ComponentType.ReadOnly<TimeChangeTracker>());
+        var timeTrackerQuery = GetEntityQuery(ComponentType.ReadWrite<TimeChangeTracker>());
         var timeTracker = timeTrackerQuery.GetSingletonRW<TimeChangeTracker>();
         if(!timeTracker.ValueRO.forBioProcessSystem){
             return;
@@ -33,7 +33,7 @@ public partial class PondBioProcess : SystemBase
             .ForEach((ref CommodityBioInfo bioInfo, ref LocalTransform transform) =>
             {
                 // Digestion process
-                float digestAmount = bioInfo.digestionRate; // digestionRate is per hour
+                float digestAmount = bioInfo.feedIntake * bioInfo.digestionRate/4 ; // digestionRate is per hour
                 digestAmount = math.min(digestAmount, bioInfo.feedIntake); // don't digest more than intake
                 bioInfo.feedIntake -= digestAmount;
 
